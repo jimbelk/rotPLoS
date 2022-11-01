@@ -1,0 +1,1761 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     65513,       1753]
+NotebookOptionsPosition[     63406,       1714]
+NotebookOutlinePosition[     63883,       1732]
+CellTagsIndexPosition[     63840,       1729]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Mathematica", " ", "code", " ", "for", " ", "renormalization", " ", "of", 
+    " ", "piecewise", " ", "linear", " ", "circle", " ", 
+    RowBox[{"homeomorphisms", "."}]}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{
+    RowBox[{"See", " ", 
+     RowBox[{"J", ".", " ", "Belk"}]}], ",", " ", 
+    RowBox[{"J", ".", " ", "Hyde"}], ",", " ", 
+    RowBox[{"and", " ", 
+     RowBox[{"J", ".", " ", "Moore"}]}], ",", " ", 
+    RowBox[{
+    "A", " ", "piecewise", " ", "linear", " ", "homeomorphism", " ", "of", 
+     " ", "the", " ", "circle", " ", "which", " ", "is", " ", "periodic", " ",
+      "under", " ", 
+     RowBox[{"renormalization", "."}]}]}], " ", "*)"}]}]], "Input",
+ CellChangeTimes->{{3.876293652972028*^9, 3.8762936977334633`*^9}},
+ CellLabel->"In[38]:=",ExpressionUUID->"dcc7acc4-1717-4fb2-bd9d-0e2339d19f06"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Initial", " ", "setup", " ", "code", " ", "for", " ", "renormalization"}],
+    " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"MaxCircleStarIterations", "=", "500"}], ";"}], " ", 
+   RowBox[{"(*", " ", 
+    RowBox[{
+    "Change", " ", "to", " ", "increase", " ", "the", " ", "maximum", " ", 
+     "number", " ", "of", " ", "stars", " ", 
+     RowBox[{"computed", "."}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"functionlist", "=", 
+     RowBox[{"Hold", "[", 
+      RowBox[{"{", 
+       RowBox[{
+       "PLCircleMap", ",", "x1", ",", "y1", ",", "x2", ",", "y2", ",", 
+        "slope", ",", "InversePiece", ",", "ApplyLinearMap", ",", 
+        "IsCollinear", ",", "CombinePieces", ",", "Pieces", ",", 
+        "DomainBreakpoints", ",", "AllBreakpoints", ",", "IdentityCircleMap", 
+        ",", "FixPiece", ",", "Simplify", ",", "Inverse", ",", 
+        "NonCommutativeMultiply", ",", "Power", ",", "Equal", ",", "Unequal", 
+        ",", "ShowGraph", ",", "CircleRotation", ",", "Restriction", ",", 
+        "MinRotations", ",", "RotationNumberEqualPair", ",", "GetAlgebraic", 
+        ",", "RotationNumber", ",", "IntervalExchange", ",", 
+        "IntervalExchangeRotate"}], "}"}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Unprotect", "@@", "functionlist"}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"x1", "[", "piece_", "]"}], ":=", 
+    RowBox[{"First", "@", 
+     RowBox[{"First", "@", "piece"}]}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"y1", "[", "piece_", "]"}], ":=", 
+    RowBox[{"Last", "@", 
+     RowBox[{"First", "@", "piece"}]}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"x2", "[", "piece_", "]"}], ":=", 
+    RowBox[{"First", "@", 
+     RowBox[{"Last", "@", "piece"}]}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"y2", "[", "piece_", "]"}], ":=", 
+    RowBox[{"Last", "@", 
+     RowBox[{"Last", "@", "piece"}]}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"slope", "[", "piece_", "]"}], ":=", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"y2", "[", "piece", "]"}], "-", 
+       RowBox[{"y1", "[", "piece", "]"}]}], ")"}], "/", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"x2", "[", "piece", "]"}], "-", 
+       RowBox[{"x1", "[", "piece", "]"}]}], ")"}]}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"InversePiece", "[", "piece_", "]"}], ":=", 
+    RowBox[{"Reverse", "/@", "piece"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"ApplyLinearMap", "[", 
+     RowBox[{"piece_", ",", "x_"}], "]"}], ":=", 
+    RowBox[{
+     RowBox[{"y1", "[", "piece", "]"}], "+", 
+     RowBox[{
+      RowBox[{"slope", "[", "piece", "]"}], 
+      RowBox[{"(", 
+       RowBox[{"x", "-", 
+        RowBox[{"x1", "[", "piece", "]"}]}], ")"}]}]}]}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"IsCollinear", "[", 
+     RowBox[{"piece1_", ",", "piece2_"}], "]"}], ":=", 
+    RowBox[{
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"Last", "[", "piece1", "]"}], "==", 
+       RowBox[{"First", "[", "piece2", "]"}]}], ")"}], "&&", 
+     RowBox[{"(", 
+      RowBox[{
+       RowBox[{"slope", "[", "piece1", "]"}], "==", 
+       RowBox[{"slope", "[", "piece2", "]"}]}], ")"}]}]}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"CombinePieces", "[", 
+     RowBox[{"piece1_", ",", "piece2_"}], "]"}], ":=", 
+    RowBox[{"{", 
+     RowBox[{
+      RowBox[{"First", "@", "piece1"}], ",", 
+      RowBox[{"Last", "@", "piece2"}]}], "}"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Pieces", "[", "f_PLCircleMap", "]"}], ":=", 
+    RowBox[{"List", "@@", "f"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"DomainBreakpoints", "[", "f_PLCircleMap", "]"}], ":=", 
+    RowBox[{"Append", "[", 
+     RowBox[{
+      RowBox[{"x1", "/@", 
+       RowBox[{"Pieces", "[", "f", "]"}]}], ",", "1"}], "]"}]}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"AllBreakpoints", "[", "f_PLCircleMap", "]"}], ":=", 
+    RowBox[{"Union", "@@", 
+     RowBox[{"(", 
+      RowBox[{"Pieces", "@", "f"}], ")"}]}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"IdentityCircleMap", "=", 
+     RowBox[{"PLCircleMap", "[", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"0", ",", "0"}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", "1"}], "}"}]}], "}"}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"FixPiece", "[", "L_", "]"}], ":=", 
+    RowBox[{"{", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"x1", "@", "L"}], "==", "1"}], ",", "0", ",", 
+          RowBox[{"x1", "@", "L"}]}], "]"}], ",", 
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"y1", "@", "L"}], "==", "1"}], ",", "0", ",", 
+          RowBox[{"y1", "@", "L"}]}], "]"}]}], "}"}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"x2", "@", "L"}], "==", "0"}], ",", "1", ",", 
+          RowBox[{"x2", "@", "L"}]}], "]"}], ",", 
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"y2", "@", "L"}], "==", "0"}], ",", "1", ",", 
+          RowBox[{"y2", "@", "L"}]}], "]"}]}], "}"}]}], "\[IndentingNewLine]",
+      "}"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Simplify", "[", "f_PLCircleMap", "]"}], ":=", 
+    RowBox[{"Module", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"curpiece", "=", 
+        RowBox[{"First", "@", "f"}]}], "}"}], ",", "\[IndentingNewLine]", 
+      RowBox[{"PLCircleMap", "@@", 
+       RowBox[{"Last", "@", 
+        RowBox[{"Last", "@", 
+         RowBox[{"Reap", "@", 
+          RowBox[{"(", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"Do", "[", "\[IndentingNewLine]", 
+             RowBox[{
+              RowBox[{"If", "[", "\[IndentingNewLine]", 
+               RowBox[{
+                RowBox[{"IsCollinear", "[", 
+                 RowBox[{"curpiece", ",", "newpiece"}], "]"}], ",", 
+                "\[IndentingNewLine]", 
+                RowBox[{"curpiece", "=", 
+                 RowBox[{"CombinePieces", "[", 
+                  RowBox[{"curpiece", ",", "newpiece"}], "]"}]}], ",", 
+                "\[IndentingNewLine]", 
+                RowBox[{
+                 RowBox[{"Sow", "[", "curpiece", "]"}], ";", 
+                 RowBox[{"curpiece", "=", "newpiece"}]}]}], 
+               "\[IndentingNewLine]", "]"}], ",", "\[IndentingNewLine]", 
+              RowBox[{"{", 
+               RowBox[{"newpiece", ",", 
+                RowBox[{"List", "@@", 
+                 RowBox[{"(", 
+                  RowBox[{"Rest", "@", "f"}], ")"}]}]}], "}"}]}], 
+             "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+            RowBox[{"Sow", "[", "curpiece", "]"}]}], ")"}]}]}]}]}]}], 
+     "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"f_PLCircleMap", "[", 
+     RowBox[{"x_", "?", "NumericQ"}], "]"}], ":=", 
+    RowBox[{"ApplyLinearMap", "[", 
+     RowBox[{
+      RowBox[{"SelectFirst", "[", 
+       RowBox[{"f", ",", 
+        RowBox[{
+         RowBox[{"x", "<=", 
+          RowBox[{"x2", "[", "#", "]"}]}], "&"}]}], "]"}], ",", "x"}], 
+     "]"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Inverse", "[", "f_PLCircleMap", "]"}], ":=", 
+    "\[IndentingNewLine]", 
+    RowBox[{"With", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"k", "=", 
+        RowBox[{"SelectFirst", "[", 
+         RowBox[{
+          RowBox[{"Range", "@", 
+           RowBox[{"Length", "@", "f"}]}], ",", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"y1", "[", 
+             RowBox[{"f", "[", 
+              RowBox[{"[", "#", "]"}], "]"}], "]"}], "==", "0"}], "&"}]}], 
+         "]"}]}], "}"}], ",", "\[IndentingNewLine]", 
+      RowBox[{"PLCircleMap", "@@", 
+       RowBox[{"(", 
+        RowBox[{"InversePiece", "/@", 
+         RowBox[{"Join", "[", 
+          RowBox[{
+           RowBox[{"f", "[", 
+            RowBox[{"[", 
+             RowBox[{"k", ";;"}], "]"}], "]"}], ",", 
+           RowBox[{"f", "[", 
+            RowBox[{"[", 
+             RowBox[{";;", 
+              RowBox[{"k", "-", "1"}]}], "]"}], "]"}]}], "]"}]}], ")"}]}]}], 
+     "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"NonCommutativeMultiply", "[", 
+     RowBox[{"f_PLCircleMap", ",", "g_PLCircleMap"}], "]"}], ":=", 
+    "\[IndentingNewLine]", 
+    RowBox[{"With", "[", 
+     RowBox[{
+      RowBox[{"{", "\[IndentingNewLine]", 
+       RowBox[{"breakpoints", "=", 
+        RowBox[{"Sort", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"Union", "[", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"FullSimplify", "[", 
+             RowBox[{"DomainBreakpoints", "@", "g"}], "]"}], ",", 
+            "\[IndentingNewLine]", 
+            RowBox[{"FullSimplify", "[", 
+             RowBox[{
+              RowBox[{"Inverse", "[", "g", "]"}], "/@", 
+              RowBox[{"DomainBreakpoints", "[", "f", "]"}]}], "]"}]}], 
+           "\[IndentingNewLine]", "]"}], ",", "\[IndentingNewLine]", "Less"}],
+          "]"}]}], "\[IndentingNewLine]", "}"}], ",", "\[IndentingNewLine]", 
+      RowBox[{"Simplify", "@", 
+       RowBox[{"(", 
+        RowBox[{"PLCircleMap", "@@", 
+         RowBox[{"Table", "[", "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"FixPiece", "[", 
+            RowBox[{"{", "\[IndentingNewLine]", 
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{
+                RowBox[{"breakpoints", "[", 
+                 RowBox[{"[", "k", "]"}], "]"}], ",", 
+                RowBox[{"FullSimplify", "@", 
+                 RowBox[{"f", "@", 
+                  RowBox[{"g", "@", 
+                   RowBox[{"breakpoints", "[", 
+                    RowBox[{"[", "k", "]"}], "]"}]}]}]}]}], "}"}], ",", 
+              "\[IndentingNewLine]", 
+              RowBox[{"{", 
+               RowBox[{
+                RowBox[{"breakpoints", "[", 
+                 RowBox[{"[", 
+                  RowBox[{"k", "+", "1"}], "]"}], "]"}], ",", 
+                RowBox[{"FullSimplify", "@", 
+                 RowBox[{"f", "@", 
+                  RowBox[{"g", "@", 
+                   RowBox[{"breakpoints", "[", 
+                    RowBox[{"[", 
+                    RowBox[{"k", "+", "1"}], "]"}], "]"}]}]}]}]}], "}"}]}], 
+             "\[IndentingNewLine]", "}"}], "]"}], ",", "\[IndentingNewLine]", 
+           RowBox[{"{", 
+            RowBox[{"k", ",", "1", ",", 
+             RowBox[{
+              RowBox[{"Length", "@", "breakpoints"}], "-", "1"}]}], "}"}]}], 
+          "]"}]}], ")"}]}]}], "\[IndentingNewLine]", "]"}]}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Power", "[", 
+     RowBox[{"f_PLCircleMap", ",", "n_Integer"}], "]"}], ":=", 
+    RowBox[{"Which", "[", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"n", "<", "0"}], ",", 
+      RowBox[{
+       RowBox[{"Inverse", "[", "f", "]"}], "^", 
+       RowBox[{"(", 
+        RowBox[{"-", "n"}], ")"}]}], ",", "\[IndentingNewLine]", 
+      RowBox[{"n", "==", "0"}], ",", "IdentityCircleMap", ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"n", "==", "1"}], ",", "f", ",", "\[IndentingNewLine]", "True", 
+      ",", 
+      RowBox[{"NonCommutativeMultiply", "@@", 
+       RowBox[{"ConstantArray", "[", 
+        RowBox[{"f", ",", "n"}], "]"}]}]}], "\n", "]"}]}], "\n", 
+   RowBox[{
+    RowBox[{"Power", "[", 
+     RowBox[{"f_PLCircleMap", ",", "g_PLCircleMap"}], "]"}], ":=", 
+    RowBox[{
+     RowBox[{"Inverse", "[", "g", "]"}], "**", "f", "**", "g"}]}], "\n", 
+   RowBox[{
+    RowBox[{"Equal", "[", 
+     RowBox[{"f1_PLCircleMap", ",", "f2_PLCircleMap"}], "]"}], ":=", 
+    RowBox[{"(", 
+     RowBox[{
+      RowBox[{"Pieces", "@", "f1"}], "==", 
+      RowBox[{"Pieces", "@", "f2"}]}], ")"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Unequal", "[", 
+     RowBox[{"f1_PLCircleMap", ",", "f2_PLCircleMap"}], "]"}], ":=", 
+    RowBox[{"!", 
+     RowBox[{"(", 
+      RowBox[{"f1", "==", "f2"}], ")"}]}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"ShowGraph", "[", "f_PLCircleMap", "]"}], ":=", 
+    "\[IndentingNewLine]", 
+    RowBox[{"Graphics", "[", 
+     RowBox[{
+      RowBox[{"{", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"AbsolutePointSize", "[", 
+         RowBox[{"Min", "[", 
+          RowBox[{"5", ",", 
+           RowBox[{"100.", "/", 
+            RowBox[{"Length", "[", "f", "]"}]}]}], "]"}], "]"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"Table", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"Tooltip", "[", 
+           RowBox[{
+            RowBox[{"Line", "[", "piece", "]"}], ",", 
+            RowBox[{"\"\<slope \>\"", "<>", 
+             RowBox[{"ToString", "[", 
+              RowBox[{
+               RowBox[{"slope", "[", "piece", "]"}], ",", "InputForm"}], 
+              "]"}]}]}], "]"}], ",", "\[IndentingNewLine]", 
+          RowBox[{"{", 
+           RowBox[{"piece", ",", 
+            RowBox[{"Pieces", "@", "f"}]}], "}"}]}], "\[IndentingNewLine]", 
+         "]"}], ",", "\[IndentingNewLine]", 
+        RowBox[{"Table", "[", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"Tooltip", "[", 
+           RowBox[{
+            RowBox[{"Point", "[", "p", "]"}], ",", 
+            RowBox[{"\"\<(\>\"", "<>", 
+             RowBox[{"ToString", "[", 
+              RowBox[{
+               RowBox[{
+               "p", "\[LeftDoubleBracket]", "1", "\[RightDoubleBracket]"}], 
+               ",", "InputForm"}], "]"}], "<>", "\"\<,\[ThinSpace]\>\"", "<>", 
+             RowBox[{"ToString", "[", 
+              RowBox[{
+               RowBox[{
+               "p", "\[LeftDoubleBracket]", "2", "\[RightDoubleBracket]"}], 
+               ",", "InputForm"}], "]"}], "<>", "\"\<)\>\""}]}], "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"p", ",", 
+            RowBox[{"AllBreakpoints", "@", "f"}]}], "}"}]}], 
+         "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", "}"}], ",", 
+      RowBox[{"Frame", "\[Rule]", "True"}], ",", 
+      RowBox[{"FrameStyle", "->", 
+       RowBox[{"Directive", "[", 
+        RowBox[{"{", 
+         RowBox[{"Thick", ",", "Black"}], "}"}], "]"}]}], ",", 
+      RowBox[{"PlotRange", "\[Rule]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"0", ",", "1"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"0", ",", "1"}], "}"}]}], "}"}]}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"GridLines", "\[Rule]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"Range", "[", 
+           RowBox[{"1", ",", "7"}], "]"}], "/", "8"}], ",", 
+         RowBox[{
+          RowBox[{"Range", "[", 
+           RowBox[{"1", ",", "7"}], "]"}], "/", "8"}]}], "}"}]}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"FrameTicks", "\[Rule]", 
+       RowBox[{"{", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"0", ",", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"1", "/", "4"}], ",", "\"\<1/4\>\""}], "}"}], ",", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"1", "/", "2"}], ",", "\"\<1/2\>\""}], "}"}], ",", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"3", "/", "4"}], ",", "\"\<3/4\>\""}], "}"}], ",", "1"}],
+           "}"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"{", 
+          RowBox[{"0", ",", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"1", "/", "4"}], ",", "\"\<1/4\>\""}], "}"}], ",", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"1", "/", "2"}], ",", "\"\<1/2\>\""}], "}"}], ",", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"3", "/", "4"}], ",", "\"\<3/4\>\""}], "}"}], ",", "1"}],
+           "}"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"{", "}"}], ",", "\[IndentingNewLine]", 
+         RowBox[{"{", "}"}]}], "\[IndentingNewLine]", "}"}]}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"FrameTicksStyle", "\[Rule]", "12"}]}], "]"}]}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"CircleRotation", "[", "theta_", "]"}], ":=", 
+    RowBox[{"If", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Mod", "[", 
+        RowBox[{"theta", ",", "1"}], "]"}], "==", "0"}], ",", 
+      "\[IndentingNewLine]", "IdentityCircleMap", ",", "\[IndentingNewLine]", 
+      RowBox[{"PLCircleMap", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{"0", ",", 
+            RowBox[{"Mod", "[", 
+             RowBox[{"theta", ",", "1"}], "]"}]}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"1", "-", 
+             RowBox[{"Mod", "[", 
+              RowBox[{"theta", ",", "1"}], "]"}]}], ",", "1"}], "}"}]}], 
+         "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"1", "-", 
+             RowBox[{"Mod", "[", 
+              RowBox[{"theta", ",", "1"}], "]"}]}], ",", "0"}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{"1", ",", 
+            RowBox[{"Mod", "[", 
+             RowBox[{"theta", ",", "1"}], "]"}]}], "}"}]}], "}"}]}], "]"}]}], 
+     "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Restriction", "[", 
+     RowBox[{"f_PLCircleMap", ",", 
+      RowBox[{"{", 
+       RowBox[{"a_", ",", "b_"}], "}"}]}], "]"}], ":=", "\[IndentingNewLine]", 
+    RowBox[{"Join", "@@", 
+     RowBox[{"Table", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"Which", "[", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"a", "<=", 
+           RowBox[{"x1", "[", "p", "]"}]}], "&&", 
+          RowBox[{
+           RowBox[{"x2", "[", "p", "]"}], "<=", "b"}]}], ",", 
+         RowBox[{"{", "p", "}"}], ",", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"x2", "[", "p", "]"}], "<=", "a"}], "||", 
+          RowBox[{"b", "<=", 
+           RowBox[{"x1", "[", "p", "]"}]}]}], ",", 
+         RowBox[{"{", "}"}], ",", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"x1", "[", "p", "]"}], "<=", "a"}], "&&", 
+          RowBox[{
+           RowBox[{"x2", "[", "p", "]"}], ">=", "b"}]}], ",", 
+         RowBox[{"{", 
+          RowBox[{"FixPiece", "@", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"{", 
+              RowBox[{"a", ",", 
+               RowBox[{"ApplyLinearMap", "[", 
+                RowBox[{"p", ",", "a"}], "]"}]}], "}"}], ",", 
+             RowBox[{"{", 
+              RowBox[{"b", ",", 
+               RowBox[{"ApplyLinearMap", "[", 
+                RowBox[{"p", ",", "b"}], "]"}]}], "}"}]}], "}"}]}], "}"}], 
+         ",", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"x1", "[", "p", "]"}], "<", "a"}], "&&", 
+          RowBox[{"a", "<", 
+           RowBox[{"x2", "[", "p", "]"}], "<", "b"}]}], ",", 
+         RowBox[{"{", 
+          RowBox[{"FixPiece", "@", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"{", 
+              RowBox[{"a", ",", 
+               RowBox[{"ApplyLinearMap", "[", 
+                RowBox[{"p", ",", "a"}], "]"}]}], "}"}], ",", 
+             RowBox[{"Last", "@", "p"}]}], "}"}]}], "}"}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"a", "<", 
+           RowBox[{"x1", "[", "p", "]"}], "<", "b"}], "&&", 
+          RowBox[{
+           RowBox[{"x2", "[", "p", "]"}], ">", "b"}]}], ",", 
+         RowBox[{"{", 
+          RowBox[{"FixPiece", "@", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"First", "@", "p"}], ",", 
+             RowBox[{"{", 
+              RowBox[{"b", ",", 
+               RowBox[{"ApplyLinearMap", "[", 
+                RowBox[{"p", ",", "b"}], "]"}]}], "}"}]}], "}"}]}], "}"}]}], 
+        "\[IndentingNewLine]", "]"}], ",", "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"p", ",", 
+         RowBox[{"Pieces", "@", "f"}]}], "}"}]}], "]"}]}]}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"NumFixedPoints", "[", "f_PLCircleMap", "]"}], ":=", 
+    RowBox[{
+     RowBox[{"NumFixedPoints", "[", "f", "]"}], "=", 
+     RowBox[{"Sum", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"Which", "[", 
+        RowBox[{
+         RowBox[{
+          RowBox[{
+           RowBox[{"x1", "[", "p", "]"}], "==", 
+           RowBox[{"y1", "[", "p", "]"}]}], "&&", 
+          RowBox[{
+           RowBox[{"x2", "[", "p", "]"}], "==", 
+           RowBox[{"y2", "[", "p", "]"}]}]}], ",", "Infinity", ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"x1", "[", "p", "]"}], "==", 
+          RowBox[{"y1", "[", "p", "]"}]}], ",", "1", ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"(", 
+            RowBox[{
+             RowBox[{"x1", "[", "p", "]"}], "-", 
+             RowBox[{"y1", "[", "p", "]"}]}], ")"}], 
+           RowBox[{"(", 
+            RowBox[{
+             RowBox[{"x2", "[", "p", "]"}], "-", 
+             RowBox[{"y2", "[", "p", "]"}]}], ")"}]}], "<", "0"}], ",", "1", 
+         ",", "\[IndentingNewLine]", "True", ",", "0"}], "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"p", ",", 
+         RowBox[{"Pieces", "@", "f"}]}], "}"}]}], "]"}]}]}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"(*", " ", 
+    RowBox[{
+    "MinRotations", " ", "computes", " ", "the", " ", "number", " ", "mf", 
+     " ", "in", " ", "the", " ", 
+     RowBox[{"paper", "."}]}], " ", "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"MinRotations", "[", "f_PLCircleMap", "]"}], ":=", 
+    RowBox[{"If", "[", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"NumFixedPoints", "[", "f", "]"}], ">", "0"}], ",", "Infinity",
+       ",", "\[IndentingNewLine]", 
+      RowBox[{"With", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"F", "=", 
+           RowBox[{"Inverse", "[", "f", "]"}]}], ",", 
+          RowBox[{"r", "=", 
+           RowBox[{"f", "[", "0", "]"}]}]}], "}"}], ",", 
+        RowBox[{"First", "@", 
+         RowBox[{"NestWhile", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"#", "[", 
+                RowBox[{"[", "1", "]"}], "]"}], "+", "1"}], ",", 
+              RowBox[{"F", "[", 
+               RowBox[{"#", "[", 
+                RowBox[{"[", "2", "]"}], "]"}], "]"}]}], "}"}], "&"}], ",", 
+           RowBox[{"{", 
+            RowBox[{"1", ",", 
+             RowBox[{"F", "[", "0", "]"}]}], "}"}], ",", 
+           RowBox[{
+            RowBox[{
+             RowBox[{
+              RowBox[{"#", "[", 
+               RowBox[{"[", "2", "]"}], "]"}], "!=", "1"}], "&&", 
+             RowBox[{
+              RowBox[{"#", "[", 
+               RowBox[{"[", "2", "]"}], "]"}], ">=", "r"}]}], "&"}]}], 
+          "]"}]}]}], "]"}]}], "\[IndentingNewLine]", "]"}]}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"CircleStar", "[", "f_PLCircleMap", "]"}], ":=", 
+    RowBox[{
+     RowBox[{"CircleStar", "[", "f", "]"}], "=", 
+     RowBox[{"If", "[", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"NumFixedPoints", "[", "f", "]"}], ">", "0"}], ",", 
+       "IdentityCircleMap", ",", "\[IndentingNewLine]", 
+       RowBox[{"With", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"r", "=", 
+            RowBox[{"f", "[", "0", "]"}]}], ",", 
+           RowBox[{"mf", "=", 
+            RowBox[{"MinRotations", "@", "f"}]}], ",", 
+           RowBox[{"F", "=", 
+            RowBox[{"Inverse", "[", "f", "]"}]}]}], "}"}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{"FullSimplify", "@", 
+          RowBox[{"Simplify", "[", 
+           RowBox[{"PLCircleMap", "@@", 
+            RowBox[{"(", 
+             RowBox[{
+              RowBox[{"Join", "[", "\[IndentingNewLine]", 
+               RowBox[{
+                RowBox[{"Restriction", "[", 
+                 RowBox[{
+                  RowBox[{"F", "^", "mf"}], ",", 
+                  RowBox[{"{", 
+                   RowBox[{"0", ",", 
+                    RowBox[{
+                    RowBox[{"(", 
+                    RowBox[{"f", "^", "mf"}], ")"}], "[", "r", "]"}]}], 
+                   "}"}]}], "]"}], ",", "\[IndentingNewLine]", 
+                RowBox[{"Restriction", "[", 
+                 RowBox[{
+                  RowBox[{"F", "^", 
+                   RowBox[{"(", 
+                    RowBox[{"mf", "+", "1"}], ")"}]}], ",", 
+                  RowBox[{"{", 
+                   RowBox[{
+                    RowBox[{
+                    RowBox[{"(", 
+                    RowBox[{"f", "^", "mf"}], ")"}], "[", "r", "]"}], ",", 
+                    "r"}], "}"}]}], "]"}]}], "\[IndentingNewLine]", "]"}], 
+              "/", "r"}], ")"}]}], "]"}]}]}], "]"}]}], "]"}]}]}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"RotationNumberEqualPair", "[", "f_PLCircleMap", "]"}], ":=", 
+    "\[IndentingNewLine]", 
+    RowBox[{"With", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"results", "=", 
+        RowBox[{"NestWhileList", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"CircleStar", "[", 
+              RowBox[{"#", "[", 
+               RowBox[{"[", "1", "]"}], "]"}], "]"}], ",", 
+             RowBox[{
+              RowBox[{"#", "[", 
+               RowBox[{"[", "2", "]"}], "]"}], "+", "1"}]}], "}"}], "&"}], 
+          ",", 
+          RowBox[{"{", 
+           RowBox[{"f", ",", "0"}], "}"}], ",", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"Length", "@", 
+             RowBox[{"Union", "[", 
+              RowBox[{
+               RowBox[{"First", "/@", 
+                RowBox[{"{", "##", "}"}]}], ",", 
+               RowBox[{"SameTest", "->", "Equal"}]}], "]"}]}], "==", 
+            RowBox[{"Length", "[", 
+             RowBox[{"First", "/@", 
+              RowBox[{"{", "##", "}"}]}], "]"}]}], "&"}], ",", "All", ",", 
+          "MaxCircleStarIterations"}], "]"}]}], "}"}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"With", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"lastone", "=", 
+          RowBox[{"First", "@", 
+           RowBox[{"Last", "@", "results"}]}]}], "}"}], ",", 
+        "\[IndentingNewLine]", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"Last", "@", 
+           RowBox[{"SelectFirst", "[", 
+            RowBox[{"results", ",", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"First", "[", "#", "]"}], "==", "lastone"}], "&"}]}], 
+            "]"}]}], ",", 
+          RowBox[{"Last", "@", 
+           RowBox[{"Last", "@", "results"}]}]}], "}"}]}], 
+       "\[IndentingNewLine]", "]"}]}], "]"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"GetAlgebraic", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"first_", ",", "second_"}], "}"}], ",", "minrotationdata_"}], 
+     "]"}], ":=", "\[IndentingNewLine]", 
+    RowBox[{"Which", "[", 
+     RowBox[{
+      RowBox[{"first", ">", "0"}], ",", "\[IndentingNewLine]", 
+      RowBox[{"1", "/", 
+       RowBox[{"(", 
+        RowBox[{
+         RowBox[{"First", "@", "minrotationdata"}], "+", 
+         RowBox[{"GetAlgebraic", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"first", "-", "1"}], ",", 
+             RowBox[{"second", "-", "1"}]}], "}"}], ",", 
+           RowBox[{"Rest", "@", "minrotationdata"}]}], "]"}]}], ")"}]}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"First", "@", "minrotationdata"}], "==", "Infinity"}], ",", 
+      "\[IndentingNewLine]", "0", ",", "\[IndentingNewLine]", "True", ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"Module", "[", 
+       RowBox[{
+        RowBox[{"{", "x", "}"}], ",", 
+        RowBox[{"SelectFirst", "[", 
+         RowBox[{
+          RowBox[{"SolveValues", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"Fold", "[", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"Simplify", "[", 
+                 RowBox[{
+                  RowBox[{"1", "/", "#1"}], "-", "#2"}], "]"}], "&"}], ",", 
+               "x", ",", "minrotationdata"}], "]"}], "==", "x"}], ",", "x"}], 
+           "]"}], ",", 
+          RowBox[{
+           RowBox[{"0", "<=", "#", "<=", "1"}], "&"}]}], "]"}]}], "]"}]}], 
+     "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"RotationNumber", "[", "f_PLCircleMap", "]"}], ":=", 
+    "\[IndentingNewLine]", 
+    RowBox[{"With", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{"pair", "=", 
+        RowBox[{"RotationNumberEqualPair", "@", "f"}]}], "}"}], ",", 
+      "\[IndentingNewLine]", 
+      RowBox[{"Module", "[", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"minrotationdata", "=", 
+          RowBox[{"MinRotations", "/@", 
+           RowBox[{"NestList", "[", 
+            RowBox[{"CircleStar", ",", "f", ",", 
+             RowBox[{
+              RowBox[{"pair", "[", 
+               RowBox[{"[", "2", "]"}], "]"}], "-", "1"}]}], "]"}]}]}], "}"}],
+         ",", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"pair", "[", 
+              RowBox[{"[", "1", "]"}], "]"}], ">=", "2"}], "&&", 
+            RowBox[{
+             RowBox[{"Nest", "[", 
+              RowBox[{"CircleStar", ",", "f", ",", 
+               RowBox[{"pair", "[", 
+                RowBox[{"[", "1", "]"}], "]"}]}], "]"}], "==", 
+             "IdentityCircleMap"}], "&&", 
+            RowBox[{
+             RowBox[{"NumFixedPoints", "@", 
+              RowBox[{"Nest", "[", 
+               RowBox[{"CircleStar", ",", "f", ",", 
+                RowBox[{
+                 RowBox[{"pair", "[", 
+                  RowBox[{"[", "1", "]"}], "]"}], "-", "1"}]}], "]"}]}], ">", 
+             "0"}]}], ",", "\[IndentingNewLine]", 
+           RowBox[{"With", "[", 
+            RowBox[{
+             RowBox[{"{", 
+              RowBox[{"g", "=", 
+               RowBox[{"Nest", "[", 
+                RowBox[{"CircleStar", ",", "f", ",", 
+                 RowBox[{
+                  RowBox[{"pair", "[", 
+                   RowBox[{"[", "1", "]"}], "]"}], "-", "2"}]}], "]"}]}], 
+              "}"}], ",", "\[IndentingNewLine]", 
+             RowBox[{"If", "[", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"NumFixedPoints", "[", 
+                 RowBox[{"g", "^", 
+                  RowBox[{"(", 
+                   RowBox[{"MinRotations", "[", "g", "]"}], ")"}]}], "]"}], "==",
+                 "0"}], ",", 
+               RowBox[{
+                RowBox[{"minrotationdata", "[", 
+                 RowBox[{"[", 
+                  RowBox[{
+                   RowBox[{"pair", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}], "-", "2", "+", "1"}], 
+                  "]"}], "]"}], "=", 
+                RowBox[{
+                 RowBox[{"MinRotations", "[", "g", "]"}], "+", "1"}]}]}], 
+              "]"}]}], "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+          "]"}], ";", "\[IndentingNewLine]", 
+         RowBox[{"Simplify", "@", 
+          RowBox[{"GetAlgebraic", "[", 
+           RowBox[{"pair", ",", "minrotationdata"}], "]"}]}]}]}], 
+       "\[IndentingNewLine]", "]"}]}], "]"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"IntervalExchange", "[", "q_", "]"}], ":=", 
+    RowBox[{"PLCircleMap", "[", 
+     RowBox[{
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"0", ",", 
+          FractionBox["1", 
+           RowBox[{"q", "+", "1"}]]}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{
+          FractionBox["1", 
+           RowBox[{"q", "+", "1"}]], ",", "1"}], "}"}]}], "}"}], ",", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{
+          FractionBox["1", 
+           RowBox[{"q", "+", "1"}]], ",", "0"}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", 
+          FractionBox["1", 
+           RowBox[{"q", "+", "1"}]]}], "}"}]}], "}"}]}], "]"}]}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"IntervalExchangeRotate", "[", 
+     RowBox[{"q_", ",", "r_"}], "]"}], ":=", 
+    RowBox[{
+     RowBox[{"CircleRotation", "[", "r", "]"}], "**", 
+     RowBox[{"IntervalExchange", "[", "q", "]"}]}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"Protect", "@@", "functionlist"}], ";"}]}]}]], "Input",
+ InitializationCell->True,
+ CellChangeTimes->{{3.860402267261988*^9, 3.860402320672885*^9}, {
+   3.8604023522569666`*^9, 3.860402707540516*^9}, 3.8604032987385106`*^9, {
+   3.8604033548446493`*^9, 3.860403395490583*^9}, {3.860403431453513*^9, 
+   3.8604034966431675`*^9}, {3.860403538540187*^9, 3.860403546752689*^9}, {
+   3.8604036242871327`*^9, 3.860403777137955*^9}, {3.860403859530117*^9, 
+   3.860403945768848*^9}, {3.8604039810980797`*^9, 3.86040398326145*^9}, {
+   3.8604041099793725`*^9, 3.8604041983104305`*^9}, {3.8604044034952145`*^9, 
+   3.8604044206037645`*^9}, {3.8604045677754602`*^9, 3.860404570333501*^9}, {
+   3.8604046028813715`*^9, 3.8604046074989147`*^9}, {3.8604046376251793`*^9, 
+   3.8604048371796455`*^9}, {3.8604061378164625`*^9, 
+   3.8604062478268204`*^9}, {3.8604070318852687`*^9, 
+   3.8604071138463707`*^9}, {3.8604071552119246`*^9, 3.860407159806013*^9}, {
+   3.860407235851657*^9, 3.86040748655525*^9}, {3.860407869036075*^9, 
+   3.86040786957625*^9}, {3.8604362415568204`*^9, 3.860436243784627*^9}, {
+   3.8604366762012644`*^9, 3.860436678610115*^9}, {3.8604367457459*^9, 
+   3.8604367495620103`*^9}, {3.8604371450763674`*^9, 
+   3.8604371479577436`*^9}, {3.8604371819151134`*^9, 3.860437198133366*^9}, {
+   3.8604373352297688`*^9, 3.860437343920664*^9}, {3.8604375844846663`*^9, 
+   3.8604375894176064`*^9}, {3.860502663947711*^9, 3.860502685449583*^9}, {
+   3.860503082848234*^9, 3.860503152311036*^9}, {3.86051151562704*^9, 
+   3.8605116128668814`*^9}, {3.8605117091099186`*^9, 
+   3.8605119717506866`*^9}, {3.8605120738614645`*^9, 
+   3.8605120778545885`*^9}, {3.8648202496688375`*^9, 
+   3.8648202669637327`*^9}, {3.8762900031254354`*^9, 
+   3.8762900963519287`*^9}, {3.876290162565174*^9, 3.8762902718485193`*^9}, {
+   3.876290305997304*^9, 3.8762905947411613`*^9}, 3.8762907265151978`*^9, {
+   3.876291733693858*^9, 3.8762918073365417`*^9}, {3.8762918627847652`*^9, 
+   3.8762919513178816`*^9}, {3.8762919871411514`*^9, 3.876292142919138*^9}, {
+   3.876292798856594*^9, 3.8762927998233356`*^9}, {3.876293156996416*^9, 
+   3.8762931778253117`*^9}, {3.8762937140866613`*^9, 3.876293755094678*^9}},
+ CellLabel->"In[39]:=",ExpressionUUID->"bb7934cd-68e9-4023-9fae-acc8e7e63340"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", 
+   RowBox[{
+   "Example", " ", "from", " ", "Theorem", " ", "4", " ", "in", " ", "the", 
+    " ", 
+    RowBox[{"paper", "."}]}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"f", "=", 
+     RowBox[{"PLCircleMap", "[", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"0", ",", 
+           RowBox[{"3", "/", "8"}]}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"1", "/", "4"}], ",", 
+           RowBox[{"3", "/", "4"}]}], "}"}]}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"1", "/", "4"}], ",", 
+           RowBox[{"3", "/", "4"}]}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"5", "/", "8"}], ",", "1"}], "}"}]}], "}"}], ",", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"5", "/", "8"}], ",", "0"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", 
+           RowBox[{"3", "/", "8"}]}], "}"}]}], "}"}]}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{"ShowGraph", "[", "f", "]"}], "\[IndentingNewLine]", 
+   RowBox[{"CircleStar", "@", "f"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"CircleStar", "@", 
+     RowBox[{"CircleStar", "@", "f"}]}], "==", "f"}], "\[IndentingNewLine]", 
+   RowBox[{"RotationNumberEqualPair", "[", "f", "]"}], "\[IndentingNewLine]", 
+   RowBox[{"RotationNumber", "[", "f", "]"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"CircleStar", "@", 
+     RowBox[{"IntervalExchangeRotate", "[", 
+      RowBox[{
+       RowBox[{"2", "/", "3"}], ",", 
+       RowBox[{"1", "/", "5"}]}], "]"}]}], "==", "f"}], "\[IndentingNewLine]", 
+   RowBox[{"RotationNumber", "@", 
+    RowBox[{"IntervalExchangeRotate", "[", 
+     RowBox[{
+      RowBox[{"2", "/", "3"}], ",", 
+      RowBox[{"1", "/", "5"}]}], "]"}]}]}]}]], "Input",
+ CellChangeTimes->{{3.875030946699505*^9, 3.8750310477487993`*^9}, {
+  3.87629332576468*^9, 3.876293356637804*^9}},
+ CellLabel->"In[76]:=",ExpressionUUID->"bf18c24d-df55-47de-bd26-0793878d8df7"],
+
+Cell[BoxData[
+ GraphicsBox[
+  {AbsolutePointSize[5], {
+    TagBox[
+     TooltipBox[
+      LineBox[NCache[{{0, Rational[3, 8]}, {
+         Rational[1, 4], Rational[3, 4]}}, {{0, 0.375}, {0.25, 0.75}}]],
+      "\"slope 3/2\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "slope 3/2", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      LineBox[NCache[{{Rational[1, 4], Rational[3, 4]}, {
+         Rational[5, 8], 1}}, {{0.25, 0.75}, {0.625, 1}}]],
+      "\"slope 2/3\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "slope 2/3", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      LineBox[NCache[{{Rational[5, 8], 0}, {1, Rational[3, 8]}}, {{
+         0.625, 0}, {1, 0.375}}]],
+      "\"slope 1\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "slope 1", "Tooltip"]& ]}, {
+    TagBox[
+     TooltipBox[PointBox[NCache[{0, Rational[3, 8]}, {0, 0.375}]],
+      "\"(0,\[ThinSpace]3/8)\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "(0,\[ThinSpace]3/8)", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      PointBox[NCache[{Rational[1, 4], Rational[3, 4]}, {0.25, 0.75}]],
+      "\"(1/4,\[ThinSpace]3/4)\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "(1/4,\[ThinSpace]3/4)", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[PointBox[NCache[{Rational[5, 8], 0}, {0.625, 0}]],
+      "\"(5/8,\[ThinSpace]0)\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "(5/8,\[ThinSpace]0)", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[PointBox[NCache[{Rational[5, 8], 1}, {0.625, 1}]],
+      "\"(5/8,\[ThinSpace]1)\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "(5/8,\[ThinSpace]1)", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[PointBox[NCache[{1, Rational[3, 8]}, {1, 0.375}]],
+      "\"(1,\[ThinSpace]3/8)\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "(1,\[ThinSpace]3/8)", "Tooltip"]& ]}},
+  Frame->True,
+  FrameStyle->Directive[{
+     Thickness[Large], 
+     GrayLevel[0]}],
+  FrameTicks->{{{0, 
+      FormBox["0", TraditionalForm]}, {
+      NCache[
+       Rational[1, 4], 0.25], 
+      FormBox["\"1/4\"", TraditionalForm]}, {
+      NCache[
+       Rational[1, 2], 0.5], 
+      FormBox["\"1/2\"", TraditionalForm]}, {
+      NCache[
+       Rational[3, 4], 0.75], 
+      FormBox["\"3/4\"", TraditionalForm]}, {1, 
+      FormBox["1", TraditionalForm]}}, {{0, 
+      FormBox["0", TraditionalForm]}, {
+      NCache[
+       Rational[1, 4], 0.25], 
+      FormBox["\"1/4\"", TraditionalForm]}, {
+      NCache[
+       Rational[1, 2], 0.5], 
+      FormBox["\"1/2\"", TraditionalForm]}, {
+      NCache[
+       Rational[3, 4], 0.75], 
+      FormBox["\"3/4\"", TraditionalForm]}, {1, 
+      FormBox["1", TraditionalForm]}}, {}, {}},
+  FrameTicksStyle->12,
+  GridLines->NCache[{{
+      Rational[1, 8], 
+      Rational[1, 4], 
+      Rational[3, 8], 
+      Rational[1, 2], 
+      Rational[5, 8], 
+      Rational[3, 4], 
+      Rational[7, 8]}, {
+      Rational[1, 8], 
+      Rational[1, 4], 
+      Rational[3, 8], 
+      Rational[1, 2], 
+      Rational[5, 8], 
+      Rational[3, 4], 
+      Rational[7, 8]}}, {{0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875}, {
+    0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875}}],
+  PlotRange->{{0, 1}, {0, 1}}]], "Output",
+ CellChangeTimes->{3.876293199917719*^9, 3.8762933572406273`*^9, 
+  3.87629378167367*^9, 3.876293822683041*^9},
+ CellLabel->"Out[77]=",ExpressionUUID->"e6bd1c19-e2a9-4de6-a277-b4808e7c1d7f"],
+
+Cell[BoxData[
+ RowBox[{"PLCircleMap", "[", 
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{"0", ",", 
+       FractionBox["4", "9"]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{
+       FractionBox["1", "3"], ",", 
+       FractionBox["2", "3"]}], "}"}]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       FractionBox["1", "3"], ",", 
+       FractionBox["2", "3"]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{
+       FractionBox["5", "9"], ",", "1"}], "}"}]}], "}"}], ",", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       FractionBox["5", "9"], ",", "0"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"1", ",", 
+       FractionBox["4", "9"]}], "}"}]}], "}"}]}], "]"}]], "Output",
+ CellChangeTimes->{3.876293199917719*^9, 3.8762933572406273`*^9, 
+  3.87629378167367*^9, 3.876293822693217*^9},
+ CellLabel->"Out[78]=",ExpressionUUID->"e33347c2-61a9-4474-9451-b89f72ffd59b"],
+
+Cell[BoxData["True"], "Output",
+ CellChangeTimes->{3.876293199917719*^9, 3.8762933572406273`*^9, 
+  3.87629378167367*^9, 3.87629382269792*^9},
+ CellLabel->"Out[79]=",ExpressionUUID->"62448498-6ada-477e-bc03-9dbaf70aa426"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"0", ",", "2"}], "}"}]], "Output",
+ CellChangeTimes->{3.876293199917719*^9, 3.8762933572406273`*^9, 
+  3.87629378167367*^9, 3.876293822702942*^9},
+ CellLabel->"Out[80]=",ExpressionUUID->"532d5b94-c205-4181-be1d-43e529f9014e"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"-", "1"}], "+", 
+  SqrtBox["2"]}]], "Output",
+ CellChangeTimes->{3.876293199917719*^9, 3.8762933572406273`*^9, 
+  3.87629378167367*^9, 3.876293822719366*^9},
+ CellLabel->"Out[81]=",ExpressionUUID->"97c07d93-9908-4316-8343-0dd28b5428f7"],
+
+Cell[BoxData["True"], "Output",
+ CellChangeTimes->{3.876293199917719*^9, 3.8762933572406273`*^9, 
+  3.87629378167367*^9, 3.8762938227231083`*^9},
+ CellLabel->"Out[82]=",ExpressionUUID->"5ef72dfa-6951-4110-b5fe-2f16f30805a6"],
+
+Cell[BoxData[
+ FractionBox["1", 
+  SqrtBox["2"]]], "Output",
+ CellChangeTimes->{3.876293199917719*^9, 3.8762933572406273`*^9, 
+  3.87629378167367*^9, 3.876293822727923*^9},
+ CellLabel->"Out[83]=",ExpressionUUID->"d21ad7d5-0073-401e-827b-718cdac67c51"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{"ShowGraph", "@", 
+  RowBox[{"IntervalExchangeRotate", "[", 
+   RowBox[{
+    RowBox[{"7", "/", "8"}], ",", 
+    RowBox[{"3", "/", "8"}]}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"RotationNumberEqualPair", "@", 
+  RowBox[{"IntervalExchangeRotate", "[", 
+   RowBox[{
+    RowBox[{"7", "/", "8"}], ",", 
+    RowBox[{"3", "/", "8"}]}], "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"RotationNumber", "@", 
+  RowBox[{"IntervalExchangeRotate", "[", 
+   RowBox[{
+    RowBox[{"7", "/", "8"}], ",", 
+    RowBox[{"3", "/", "8"}]}], "]"}]}]}], "Input",
+ CellChangeTimes->{{3.8750323390221157`*^9, 3.875032340156801*^9}, {
+  3.8762933747606287`*^9, 3.876293380831485*^9}},
+ CellLabel->"In[84]:=",ExpressionUUID->"c99a054b-8dad-4f43-a0d8-d3f783e82f81"],
+
+Cell[BoxData[
+ GraphicsBox[
+  {AbsolutePointSize[5], {
+    TagBox[
+     TooltipBox[
+      LineBox[NCache[{{0, Rational[109, 120]}, {Rational[11, 105], 1}}, {{
+         0, 0.9083333333333333}, {0.10476190476190476`, 1}}]],
+      "\"slope 7/8\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "slope 7/8", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      LineBox[NCache[{{Rational[11, 105], 0}, {
+         Rational[8, 15], Rational[3, 8]}}, {{0.10476190476190476`, 0}, {
+         0.5333333333333333, 0.375}}]],
+      "\"slope 7/8\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "slope 7/8", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      LineBox[NCache[{{Rational[8, 15], Rational[3, 8]}, {
+         1, Rational[109, 120]}}, {{0.5333333333333333, 0.375}, {
+         1, 0.9083333333333333}}]],
+      "\"slope 8/7\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "slope 8/7", "Tooltip"]& ]}, {
+    TagBox[
+     TooltipBox[
+      PointBox[NCache[{0, Rational[109, 120]}, {0, 0.9083333333333333}]],
+      "\"(0,\[ThinSpace]109/120)\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "(0,\[ThinSpace]109/120)", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      PointBox[NCache[{Rational[11, 105], 0}, {0.10476190476190476`, 0}]],
+      "\"(11/105,\[ThinSpace]0)\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "(11/105,\[ThinSpace]0)", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      PointBox[NCache[{Rational[11, 105], 1}, {0.10476190476190476`, 1}]],
+      "\"(11/105,\[ThinSpace]1)\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "(11/105,\[ThinSpace]1)", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      PointBox[NCache[{Rational[8, 15], Rational[3, 8]}, {0.5333333333333333, 
+        0.375}]],
+      "\"(8/15,\[ThinSpace]3/8)\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "(8/15,\[ThinSpace]3/8)", "Tooltip"]& ], 
+    TagBox[
+     TooltipBox[
+      PointBox[NCache[{1, Rational[109, 120]}, {1, 0.9083333333333333}]],
+      "\"(1,\[ThinSpace]109/120)\"",
+      TooltipStyle->"TextStyling"],
+     Annotation[#, "(1,\[ThinSpace]109/120)", "Tooltip"]& ]}},
+  Frame->True,
+  FrameStyle->Directive[{
+     Thickness[Large], 
+     GrayLevel[0]}],
+  FrameTicks->{{{0, 
+      FormBox["0", TraditionalForm]}, {
+      NCache[
+       Rational[1, 4], 0.25], 
+      FormBox["\"1/4\"", TraditionalForm]}, {
+      NCache[
+       Rational[1, 2], 0.5], 
+      FormBox["\"1/2\"", TraditionalForm]}, {
+      NCache[
+       Rational[3, 4], 0.75], 
+      FormBox["\"3/4\"", TraditionalForm]}, {1, 
+      FormBox["1", TraditionalForm]}}, {{0, 
+      FormBox["0", TraditionalForm]}, {
+      NCache[
+       Rational[1, 4], 0.25], 
+      FormBox["\"1/4\"", TraditionalForm]}, {
+      NCache[
+       Rational[1, 2], 0.5], 
+      FormBox["\"1/2\"", TraditionalForm]}, {
+      NCache[
+       Rational[3, 4], 0.75], 
+      FormBox["\"3/4\"", TraditionalForm]}, {1, 
+      FormBox["1", TraditionalForm]}}, {}, {}},
+  FrameTicksStyle->12,
+  GridLines->NCache[{{
+      Rational[1, 8], 
+      Rational[1, 4], 
+      Rational[3, 8], 
+      Rational[1, 2], 
+      Rational[5, 8], 
+      Rational[3, 4], 
+      Rational[7, 8]}, {
+      Rational[1, 8], 
+      Rational[1, 4], 
+      Rational[3, 8], 
+      Rational[1, 2], 
+      Rational[5, 8], 
+      Rational[3, 4], 
+      Rational[7, 8]}}, {{0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875}, {
+    0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875}}],
+  PlotRange->{{0, 1}, {0, 1}}]], "Output",
+ CellChangeTimes->{3.876293388991059*^9, 3.876293781742587*^9, 
+  3.8762938227498617`*^9},
+ CellLabel->"Out[84]=",ExpressionUUID->"cf0b7b58-8479-4f2c-b10f-1a663f30a89f"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"148", ",", "149"}], "}"}]], "Output",
+ CellChangeTimes->{3.876293388991059*^9, 3.876293781742587*^9, 
+  3.8762938514085608`*^9},
+ CellLabel->"Out[85]=",ExpressionUUID->"26d5b4e1-7bc5-498b-ba86-95c67d115fec"],
+
+Cell[BoxData[
+ FractionBox[
+  "668882489207594075334619723191244632191899781818066714800164040622", 
+  "761960058189671511292372730373166431351657862332319255996727602151"]], \
+"Output",
+ CellChangeTimes->{3.876293388991059*^9, 3.876293781742587*^9, 
+  3.876293852848324*^9},
+ CellLabel->"Out[86]=",ExpressionUUID->"8ffc5ec0-6c32-4b53-b6b5-db24ff1b99a5"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", 
+   RowBox[{"F", " ", "obstruction"}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"g", "=", 
+     RowBox[{"PLCircleMap", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"0", ",", "0"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"1", "/", "3"}], ",", 
+           RowBox[{"1", "/", "2"}]}], "}"}]}], "}"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"1", "/", "3"}], ",", 
+           RowBox[{"1", "/", "2"}]}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"11", "/", "24"}], ",", 
+           RowBox[{"7", "/", "12"}]}], "}"}]}], "}"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"11", "/", "24"}], ",", 
+           RowBox[{"7", "/", "12"}]}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"5", "/", "8"}], ",", 
+           RowBox[{"3", "/", "4"}]}], "}"}]}], "}"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"5", "/", "8"}], ",", 
+           RowBox[{"3", "/", "4"}]}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", "1"}], "}"}]}], "}"}]}], "]"}]}], ";"}], 
+   "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"h", "=", 
+     RowBox[{"PLCircleMap", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{"0", ",", "0"}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"1", "/", "54"}], ",", 
+           RowBox[{"1", "/", "16"}]}], "}"}]}], "}"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"1", "/", "54"}], ",", 
+           RowBox[{"1", "/", "16"}]}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"1", "/", "4"}], ",", 
+           RowBox[{"7", "/", "12"}]}], "}"}]}], "}"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"1", "/", "4"}], ",", 
+           RowBox[{"7", "/", "12"}]}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"7", "/", "12"}], ",", 
+           RowBox[{"11", "/", "12"}]}], "}"}]}], "}"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"7", "/", "12"}], ",", 
+           RowBox[{"11", "/", "12"}]}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"95", "/", "96"}], ",", 
+           RowBox[{"323", "/", "324"}]}], "}"}]}], "}"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"95", "/", "96"}], ",", 
+           RowBox[{"323", "/", "324"}]}], "}"}], ",", 
+         RowBox[{"{", 
+          RowBox[{"1", ",", "1"}], "}"}]}], "}"}]}], "\[IndentingNewLine]", 
+      "]"}]}], ";"}], "\[IndentingNewLine]", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"ShowGraph", "[", "g", "]"}], ",", 
+     RowBox[{"ShowGraph", "[", "h", "]"}]}], "}"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"CircleStar", "@", 
+     RowBox[{"IntervalExchangeRotate", "[", 
+      RowBox[{
+       RowBox[{"2", "/", "3"}], ",", 
+       RowBox[{"1", "/", "5"}]}], "]"}]}], "==", "\[IndentingNewLine]", 
+    RowBox[{"PLCircleMap", "@@", 
+     RowBox[{"Join", "[", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"3", "*", 
+         RowBox[{"Restriction", "[", 
+          RowBox[{"g", ",", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"1", "/", "4"}], ",", 
+             RowBox[{
+              RowBox[{"(", 
+               RowBox[{"g", "^", 
+                RowBox[{"(", 
+                 RowBox[{"-", "1"}], ")"}]}], ")"}], "[", 
+              RowBox[{"7", "/", "12"}], "]"}]}], "}"}]}], "]"}]}], "-", 
+        RowBox[{"3", "/", "4"}]}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"3", "*", 
+         RowBox[{"Restriction", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{"Inverse", "[", "h", "]"}], "**", "g"}], ",", 
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"(", 
+               RowBox[{"g", "^", 
+                RowBox[{"(", 
+                 RowBox[{"-", "1"}], ")"}]}], ")"}], "[", 
+              RowBox[{"7", "/", "12"}], "]"}], ",", 
+             RowBox[{"7", "/", "12"}]}], "}"}]}], "]"}]}], "-", 
+        RowBox[{"3", "/", "4"}]}]}], "\[IndentingNewLine]", 
+      "]"}]}]}]}]}]], "Input",
+ CellChangeTimes->{{3.875103778193325*^9, 3.8751038234366426`*^9}, {
+  3.875103853817728*^9, 3.8751038983130107`*^9}, {3.8762934222165985`*^9, 
+  3.8762934590604515`*^9}, {3.876293810917945*^9, 3.876293811922269*^9}},
+ CellLabel->"In[87]:=",ExpressionUUID->"3aaf4468-9b79-41b9-bbc3-7fe65b699b68"],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{
+   GraphicsBox[
+    {AbsolutePointSize[5], {
+      TagBox[
+       TooltipBox[
+        LineBox[NCache[{{0, 0}, {Rational[1, 3], Rational[1, 2]}}, {{0, 0}, {
+           0.3333333333333333, 0.5}}]],
+        "\"slope 3/2\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "slope 3/2", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        LineBox[NCache[{{Rational[1, 3], Rational[1, 2]}, {
+           Rational[11, 24], Rational[7, 12]}}, {{0.3333333333333333, 0.5}, {
+          0.4583333333333333, 0.5833333333333334}}]],
+        "\"slope 2/3\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "slope 2/3", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        LineBox[NCache[{{Rational[11, 24], Rational[7, 12]}, {
+           Rational[5, 8], Rational[3, 4]}}, {{0.4583333333333333, 
+          0.5833333333333334}, {0.625, 0.75}}]],
+        "\"slope 1\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "slope 1", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        LineBox[NCache[{{Rational[5, 8], Rational[3, 4]}, {1, 1}}, {{0.625, 
+           0.75}, {1, 1}}]],
+        "\"slope 2/3\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "slope 2/3", "Tooltip"]& ]}, {
+      TagBox[
+       TooltipBox[PointBox[{0, 0}],
+        "\"(0,\[ThinSpace]0)\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "(0,\[ThinSpace]0)", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        PointBox[
+         NCache[{Rational[1, 3], Rational[1, 2]}, {0.3333333333333333, 0.5}]],
+        "\"(1/3,\[ThinSpace]1/2)\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "(1/3,\[ThinSpace]1/2)", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        PointBox[
+         NCache[{Rational[11, 24], Rational[7, 12]}, {0.4583333333333333, 
+          0.5833333333333334}]],
+        "\"(11/24,\[ThinSpace]7/12)\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "(11/24,\[ThinSpace]7/12)", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        PointBox[NCache[{Rational[5, 8], Rational[3, 4]}, {0.625, 0.75}]],
+        "\"(5/8,\[ThinSpace]3/4)\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "(5/8,\[ThinSpace]3/4)", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[PointBox[{1, 1}],
+        "\"(1,\[ThinSpace]1)\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "(1,\[ThinSpace]1)", "Tooltip"]& ]}},
+    Frame->True,
+    FrameStyle->Directive[{
+       Thickness[Large], 
+       GrayLevel[0]}],
+    FrameTicks->{{{0, 
+        FormBox["0", TraditionalForm]}, {
+        NCache[
+         Rational[1, 4], 0.25], 
+        FormBox["\"1/4\"", TraditionalForm]}, {
+        NCache[
+         Rational[1, 2], 0.5], 
+        FormBox["\"1/2\"", TraditionalForm]}, {
+        NCache[
+         Rational[3, 4], 0.75], 
+        FormBox["\"3/4\"", TraditionalForm]}, {1, 
+        FormBox["1", TraditionalForm]}}, {{0, 
+        FormBox["0", TraditionalForm]}, {
+        NCache[
+         Rational[1, 4], 0.25], 
+        FormBox["\"1/4\"", TraditionalForm]}, {
+        NCache[
+         Rational[1, 2], 0.5], 
+        FormBox["\"1/2\"", TraditionalForm]}, {
+        NCache[
+         Rational[3, 4], 0.75], 
+        FormBox["\"3/4\"", TraditionalForm]}, {1, 
+        FormBox["1", TraditionalForm]}}, {}, {}},
+    FrameTicksStyle->12,
+    GridLines->NCache[{{
+        Rational[1, 8], 
+        Rational[1, 4], 
+        Rational[3, 8], 
+        Rational[1, 2], 
+        Rational[5, 8], 
+        Rational[3, 4], 
+        Rational[7, 8]}, {
+        Rational[1, 8], 
+        Rational[1, 4], 
+        Rational[3, 8], 
+        Rational[1, 2], 
+        Rational[5, 8], 
+        Rational[3, 4], 
+        Rational[7, 8]}}, {{0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875}, {
+      0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875}}],
+    PlotRange->{{0, 1}, {0, 1}}], ",", 
+   GraphicsBox[
+    {AbsolutePointSize[5], {
+      TagBox[
+       TooltipBox[
+        LineBox[NCache[{{0, 0}, {Rational[1, 54], Rational[1, 16]}}, {{0, 
+           0}, {0.018518518518518517`, 0.0625}}]],
+        "\"slope 27/8\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "slope 27/8", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        LineBox[NCache[{{Rational[1, 54], Rational[1, 16]}, {
+           Rational[1, 4], Rational[7, 12]}}, {{0.018518518518518517`, 
+          0.0625}, {0.25, 0.5833333333333334}}]],
+        "\"slope 9/4\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "slope 9/4", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        LineBox[NCache[{{Rational[1, 4], Rational[7, 12]}, {
+           Rational[7, 12], Rational[11, 12]}}, {{0.25, 0.5833333333333334}, {
+          0.5833333333333334, 0.9166666666666666}}]],
+        "\"slope 1\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "slope 1", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        LineBox[NCache[{{Rational[7, 12], Rational[11, 12]}, {
+           Rational[95, 96], Rational[323, 324]}}, {{0.5833333333333334, 
+          0.9166666666666666}, {0.9895833333333334, 0.9969135802469136}}]],
+        "\"slope 16/81\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "slope 16/81", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        LineBox[NCache[{{Rational[95, 96], Rational[323, 324]}, {1, 1}}, {{
+           0.9895833333333334, 0.9969135802469136}, {1, 1}}]],
+        "\"slope 8/27\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "slope 8/27", "Tooltip"]& ]}, {
+      TagBox[
+       TooltipBox[PointBox[{0, 0}],
+        "\"(0,\[ThinSpace]0)\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "(0,\[ThinSpace]0)", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        PointBox[
+         NCache[{Rational[1, 54], Rational[1, 16]}, {0.018518518518518517`, 
+          0.0625}]],
+        "\"(1/54,\[ThinSpace]1/16)\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "(1/54,\[ThinSpace]1/16)", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        PointBox[
+         NCache[{Rational[1, 4], Rational[7, 12]}, {0.25, 
+          0.5833333333333334}]],
+        "\"(1/4,\[ThinSpace]7/12)\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "(1/4,\[ThinSpace]7/12)", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        PointBox[
+         NCache[{Rational[7, 12], Rational[11, 12]}, {0.5833333333333334, 
+          0.9166666666666666}]],
+        "\"(7/12,\[ThinSpace]11/12)\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "(7/12,\[ThinSpace]11/12)", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[
+        PointBox[
+         NCache[{Rational[95, 96], Rational[323, 324]}, {0.9895833333333334, 
+          0.9969135802469136}]],
+        "\"(95/96,\[ThinSpace]323/324)\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "(95/96,\[ThinSpace]323/324)", "Tooltip"]& ], 
+      TagBox[
+       TooltipBox[PointBox[{1, 1}],
+        "\"(1,\[ThinSpace]1)\"",
+        TooltipStyle->"TextStyling"],
+       Annotation[#, "(1,\[ThinSpace]1)", "Tooltip"]& ]}},
+    Frame->True,
+    FrameStyle->Directive[{
+       Thickness[Large], 
+       GrayLevel[0]}],
+    FrameTicks->{{{0, 
+        FormBox["0", TraditionalForm]}, {
+        NCache[
+         Rational[1, 4], 0.25], 
+        FormBox["\"1/4\"", TraditionalForm]}, {
+        NCache[
+         Rational[1, 2], 0.5], 
+        FormBox["\"1/2\"", TraditionalForm]}, {
+        NCache[
+         Rational[3, 4], 0.75], 
+        FormBox["\"3/4\"", TraditionalForm]}, {1, 
+        FormBox["1", TraditionalForm]}}, {{0, 
+        FormBox["0", TraditionalForm]}, {
+        NCache[
+         Rational[1, 4], 0.25], 
+        FormBox["\"1/4\"", TraditionalForm]}, {
+        NCache[
+         Rational[1, 2], 0.5], 
+        FormBox["\"1/2\"", TraditionalForm]}, {
+        NCache[
+         Rational[3, 4], 0.75], 
+        FormBox["\"3/4\"", TraditionalForm]}, {1, 
+        FormBox["1", TraditionalForm]}}, {}, {}},
+    FrameTicksStyle->12,
+    GridLines->NCache[{{
+        Rational[1, 8], 
+        Rational[1, 4], 
+        Rational[3, 8], 
+        Rational[1, 2], 
+        Rational[5, 8], 
+        Rational[3, 4], 
+        Rational[7, 8]}, {
+        Rational[1, 8], 
+        Rational[1, 4], 
+        Rational[3, 8], 
+        Rational[1, 2], 
+        Rational[5, 8], 
+        Rational[3, 4], 
+        Rational[7, 8]}}, {{0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875}, {
+      0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875}}],
+    PlotRange->{{0, 1}, {0, 1}}]}], "}"}]], "Output",
+ CellChangeTimes->{
+  3.8751038987106614`*^9, {3.876293431610987*^9, 3.8762934602809925`*^9}, 
+   3.8762938529036727`*^9},
+ CellLabel->"Out[89]=",ExpressionUUID->"0a9a1932-24a1-44e6-a297-9454ada6a20e"],
+
+Cell[BoxData["True"], "Output",
+ CellChangeTimes->{
+  3.8751038987106614`*^9, {3.876293431610987*^9, 3.8762934602809925`*^9}, 
+   3.87629385292246*^9},
+ CellLabel->"Out[90]=",ExpressionUUID->"f12ac34a-29a4-496b-ba65-db165b00d0ce"]
+}, Open  ]]
+},
+WindowSize->{960, 478},
+WindowMargins->{{22.5, Automatic}, {Automatic, 534.5}},
+TaggingRules-><|"TryRealOnly" -> False|>,
+Magnification:>0.9 Inherited,
+FrontEndVersion->"13.1 for Microsoft Windows (64-bit) (August 22, 2022)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"03ac2b1b-6e1c-4a2a-aafd-d815ef680484"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 909, 20, 60, "Input",ExpressionUUID->"dcc7acc4-1717-4fb2-bd9d-0e2339d19f06"],
+Cell[1470, 42, 34906, 892, 2501, "Input",ExpressionUUID->"bb7934cd-68e9-4023-9fae-acc8e7e63340",
+ InitializationCell->True],
+Cell[CellGroupData[{
+Cell[36401, 938, 2169, 59, 163, "Input",ExpressionUUID->"bf18c24d-df55-47de-bd26-0793878d8df7"],
+Cell[38573, 999, 3393, 97, 339, "Output",ExpressionUUID->"e6bd1c19-e2a9-4de6-a277-b4808e7c1d7f"],
+Cell[41969, 1098, 962, 31, 44, "Output",ExpressionUUID->"e33347c2-61a9-4474-9451-b89f72ffd59b"],
+Cell[42934, 1131, 221, 3, 28, "Output",ExpressionUUID->"62448498-6ada-477e-bc03-9dbaf70aa426"],
+Cell[43158, 1136, 264, 5, 28, "Output",ExpressionUUID->"532d5b94-c205-4181-be1d-43e529f9014e"],
+Cell[43425, 1143, 271, 6, 30, "Output",ExpressionUUID->"97c07d93-9908-4316-8343-0dd28b5428f7"],
+Cell[43699, 1151, 224, 3, 28, "Output",ExpressionUUID->"5ef72dfa-6951-4110-b5fe-2f16f30805a6"],
+Cell[43926, 1156, 251, 5, 48, "Output",ExpressionUUID->"d21ad7d5-0073-401e-827b-718cdac67c51"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[44214, 1166, 761, 18, 60, "Input",ExpressionUUID->"c99a054b-8dad-4f43-a0d8-d3f783e82f81"],
+Cell[44978, 1186, 3651, 104, 339, "Output",ExpressionUUID->"cf0b7b58-8479-4f2c-b10f-1a663f30a89f"],
+Cell[48632, 1292, 247, 5, 28, "Output",ExpressionUUID->"26d5b4e1-7bc5-498b-ba86-95c67d115fec"],
+Cell[48882, 1299, 354, 7, 44, "Output",ExpressionUUID->"8ffc5ec0-6c32-4b53-b6b5-db24ff1b99a5"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[49273, 1311, 5187, 151, 335, "Input",ExpressionUUID->"3aaf4468-9b79-41b9-bbc3-7fe65b699b68"],
+Cell[54463, 1464, 8694, 241, 179, "Output",ExpressionUUID->"0a9a1932-24a1-44e6-a297-9454ada6a20e"],
+Cell[63160, 1707, 230, 4, 52, "Output",ExpressionUUID->"f12ac34a-29a4-496b-ba65-db165b00d0ce"]
+}, Open  ]]
+}
+]
+*)
+
